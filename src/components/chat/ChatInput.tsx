@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 export const ChatInput = () => {
   const [text, setText] = useState("");
-  const { addMessage, voiceState, setVoiceState, connectionStatus } =
+  const { setVoiceState, sendMessage, connectionStatus, voiceState } =
     useChatStore();
 
   const recognitionRef = useRef<any>(null);
@@ -52,11 +52,10 @@ export const ChatInput = () => {
     if (!text.trim() || isProcessing || isDisconnected) return;
 
     // Add user message to store
-    addMessage(text, "user");
     const currInput = text;
     setText("");
 
-    await aiService.generateResponse(currInput);
+    await sendMessage(currInput);
   };
 
   const toggleMic = () => {

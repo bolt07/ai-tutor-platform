@@ -1,5 +1,7 @@
+import { timeStamp } from "console";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { aiService } from "../services/aiService";
 // message structure
 export interface Message {
   id: string;
@@ -24,6 +26,9 @@ interface ChatState {
     isStreaming?: boolean,
   ) => void;
   deleteMessageAfter: (id: string) => void;
+  editMessage: (messageId: string, newContent: string) => void;
+  sendMessage: (content: string, exits?: boolean) => void;
+  getAIResponse: (content: string) => void;
   setVoiceState: (state: ChatState["voiceState"]) => void;
   setConnectionStatus: (status: ChatState["connectionStatus"]) => void;
   setLatency: (ms: number) => void;
@@ -32,7 +37,7 @@ interface ChatState {
 
 export const useChatStore = create<ChatState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // Intial / default state
       messages: [],
       connectionStatus: "connected",
@@ -64,9 +69,42 @@ export const useChatStore = create<ChatState>()(
       deleteMessageAfter: (id) =>
         set((state) => {
           const index = state.messages.findIndex((m) => m.id === id);
+          if (index == -1) return state;
           return { messages: state.messages.slice(0, index + 1) };
         }),
 
+      editMessage: (messageId, newContent) => {
+        set((state) => ({
+          messages: state.messages.map((m) =>
+            m.id === messageId ? { ...m, content: newContent } : m,
+          ),
+        }));
+      },
+
+      sendMessage: async (content, exits = false) => {
+        if (!exits) {
+          get().addMessage(content, "user");
+        }
+
+        try {
+          await get().getAIResponse(content);
+        } catch (error) {
+          console.log(error);
+        }
+      },
+
+      getAIResponse: async (content) => {
+        const aiId = get().addMessage("", "ai");
+        get().setVoiceState("processing");
+
+        try {
+          await aiService.generateResponse(content, aiId);
+        } catch (error) {
+          console.log(error);
+        } finally {
+          get().setVoiceState("idle");
+        }
+      },
       setVoiceState: (voiceState) => set({ voiceState }),
       setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
       setLatency: (latency) => set({ latency }),

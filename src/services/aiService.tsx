@@ -11,14 +11,14 @@ const RESPONSES = [
 const sleep = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
 export const aiService = {
-  async generateResponse(userPrompt: string) {
+  async generateResponse(userPrompt: string, aiMessageId: string) {
     const store = useChatStore.getState();
 
     store.setVoiceState("processing");
     const thinkingTime = Math.floor(Math.random() * 1000) + 500;
     await sleep(thinkingTime);
 
-    const aiMessageId = store.addMessage("", "ai");
+    //const aiMessageId = store.addMessage("", "ai");
 
     const responseText =
       RESPONSES.find((r) =>

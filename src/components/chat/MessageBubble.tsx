@@ -1,14 +1,37 @@
 import { Message, useChatStore } from "@/src/store/useChatStore";
-import { Bot, Copy, Play, RotateCcw, User } from "lucide-react";
+import {
+  Bot,
+  Check,
+  Copy,
+  Pencil,
+  Play,
+  RotateCcw,
+  User,
+  X,
+} from "lucide-react";
+import { useState } from "react";
 
 interface Props {
   message: Message;
 }
+
 export const MessageBubble = ({ message }: Props) => {
-  const { setVoiceState } = useChatStore();
+  const { setVoiceState, editMessage, sendMessage, deleteMessageAfter } =
+    useChatStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(message.content);
 
   const isAI = message.role === "ai";
-  const deleteAfter = useChatStore((state) => state.deleteMessageAfter);
+
+  const handleEdit = () => {
+    if (editText.trim() === "") return;
+
+    editMessage(message.id, editText);
+    deleteMessageAfter(message.id);
+
+    sendMessage(editText, true);
+    setIsEditing(false);
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(message.content);
@@ -28,17 +51,11 @@ export const MessageBubble = ({ message }: Props) => {
     const utterance = new SpeechSynthesisUtterance(message.content);
 
     // event listeners to handle the speaker status
-    utterance.onstart = () => {
-      setVoiceState("speaking");
-    };
+    utterance.onstart = () => setVoiceState("speaking");
 
-    utterance.onend = () => {
-      setVoiceState("idle");
-    };
+    utterance.onend = () => setVoiceState("idle");
 
-    utterance.onerror = () => {
-      setVoiceState("idle");
-    };
+    utterance.onerror = () => setVoiceState("idle");
 
     // future -> have to make voice more soothing to ears(read more about)
     // or make it custom, so that user can decide which voice to hear
@@ -49,8 +66,24 @@ export const MessageBubble = ({ message }: Props) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  const handleRetry = () => {
+    const allMessages = useChatStore.getState().messages;
+    const currentIndex = allMessages.findIndex((m) => m.id === message.id);
+
+    if (currentIndex > 0) {
+      const prevMessage = allMessages[currentIndex - 1];
+
+      if (prevMessage.role === "user") {
+        deleteMessageAfter(prevMessage.id);
+        sendMessage(prevMessage.content, true);
+      }
+    }
+  };
+
   return (
-    <div className={`flex gap-4 ${isAI ? "justify-start" : "justify-end"}`}>
+    <div
+      className={`group mb-6 flex gap-4 ${isAI ? "justify-start" : "justify-end"}`}
+    >
       {isAI && (
         <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
           <Bot size={18} className="text-white" />
@@ -65,16 +98,44 @@ export const MessageBubble = ({ message }: Props) => {
               : "rounded-tr-none bg-blue-600 border-blue-600 text-white shadow-md"
           }`}
         >
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
-            {message.content}
-            {message.isStreaming && (
-              <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
-            )}
-          </p>
+          {/* Editing mode-ON */}
+          {!isAI && isEditing ? (
+            <div>
+              <textarea
+                autoFocus
+                className="w-full bg-blue-700 text-white rounded-lg p-2 text-sm outline-none border border-blue-400 focus:ring-1 focus:ring-white min-h-[80px] resize-none"
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+              />
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditText(message.content);
+                  }}
+                >
+                  <X size={16} />
+                </button>
+                <button
+                  onClick={handleEdit}
+                  className="p-1 bg-white text-blue-600 hover:bg-slate-100 rounded transition-colors"
+                >
+                  <Check size={16} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+              {message.content}
+              {message.isStreaming && (
+                <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
+              )}
+            </p>
+          )}
         </div>
 
         {isAI && !message.isStreaming && (
-          <div className="flex items-cener gap-3 ml-1 text-slate-400 aark:text-slate-500">
+          <div className="flex items-center gap-3 ml-1 text-slate-400 dark:text-slate-500">
             <button
               onClick={handleCopy}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -92,10 +153,21 @@ export const MessageBubble = ({ message }: Props) => {
             it just deletes the messages send after a certain message.
             PENDING!!!! */}
             <button
-              onClick={() => deleteAfter(message.id)}
+              onClick={handleRetry}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <RotateCcw size={14} />
+            </button>
+          </div>
+        )}
+        {/* Edit pencil icon */}
+        {!isAI && !isEditing && (
+          <div className="flex justify-end pr-1">
+            <button
+              onClick={() => setIsEditing(true)}
+              className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+            >
+              <Pencil size={14} />
             </button>
           </div>
         )}
