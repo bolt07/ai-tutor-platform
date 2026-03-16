@@ -8,6 +8,7 @@ export const ChatInput = () => {
   const { setVoiceState, sendMessage, connectionStatus, voiceState } =
     useChatStore();
 
+  // reference of chatInput box
   const recognitionRef = useRef<any>(null);
 
   const isDisconnected = connectionStatus === "disconnected";
@@ -19,6 +20,7 @@ export const ChatInput = () => {
       (window as any).SpeechRecognition ||
       (window as any).webkitSpeechRecognition;
 
+    // check browser support and if box is empty? if yes, it creates an instance and listener for future(intially off)
     if (winSpeech && !recognitionRef.current) {
       const recognition = new winSpeech();
 
@@ -27,6 +29,7 @@ export const ChatInput = () => {
       // gives text in real-time not after i have don't speaking
       recognition.interimResults = true;
 
+      // this is the ear(event listener)
       // onresult event is a nested object
       // for each sentence API gives multiple gusses ordered by confidence ([0] -> most likey guess)
       // as the event.results is not an array first convert this into an array and then apply array operation on it

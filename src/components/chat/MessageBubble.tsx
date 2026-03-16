@@ -67,7 +67,7 @@ export const MessageBubble = ({ message }: Props) => {
   };
 
   const handleRetry = () => {
-    const allMessages = useChatStore.getState().messages;
+    const allMessages = useChatStore.getState().chatData?.data ?? [];
     const currentIndex = allMessages.findIndex((m) => m.id === message.id);
 
     if (currentIndex > 0) {

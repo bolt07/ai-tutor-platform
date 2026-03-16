@@ -2,6 +2,8 @@ import { timeStamp } from "console";
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { aiService } from "../services/aiService";
+import { VirtuosoMessageListProps } from "@virtuoso.dev/message-list";
+
 // message structure
 export interface Message {
   id: string;
@@ -13,7 +15,7 @@ export interface Message {
 
 interface ChatState {
   // state
-  messages: Message[];
+  chatData: VirtuosoMessageListProps<Message, null>["data"];
   connectionStatus: "connected" | "reconnecting" | "disconnected";
   voiceState: "idle" | "listening" | "processing" | "speaking";
   latency: number;
@@ -39,7 +41,7 @@ export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
       // Intial / default state
-      messages: [],
+      chatData: { data: [] },
       connectionStatus: "connected",
       voiceState: "idle",
       latency: 0,
@@ -55,29 +57,61 @@ export const useChatStore = create<ChatState>()(
           isStreaming: role === "ai",
         };
 
-        set((state) => ({ messages: [...state.messages, newMessage] }));
+        set((state) => ({
+          chatData: {
+            // ? -> optional chaining and ?? -> nullish coalescing(prevent app from crashing if the chat data hasn't loaded yet or missing)
+            // ?? -> check if value at left is null/undefined -> if yes then give right value
+            data: [...(state.chatData?.data ?? []), newMessage],
+            scrollModifier: {
+              type: "auto-scroll-to-bottom",
+              autoScroll: ({ scrollInProgress, atBottom }) => {
+                return {
+                  index: "LAST",
+                  align: "start",
+                  behavior: atBottom || scrollInProgress ? "smooth" : "auto",
+                };
+              },
+            },
+          },
+        }));
         return id;
       },
 
       updateMessageContent: (id, newContent, isStreaming = false) =>
         set((state) => ({
-          messages: state.messages.map((msg) =>
-            msg.id === id ? { ...msg, content: newContent, isStreaming } : msg,
-          ),
+          chatData: {
+            data: (state.chatData?.data ?? []).map((msg) =>
+              msg.id === id
+                ? { ...msg, content: newContent, isStreaming }
+                : msg,
+            ),
+            // scrolling smoothly when AI types
+            scrollModifier: {
+              type: "items-change",
+              behavior: "smooth",
+            },
+          },
         })),
 
       deleteMessageAfter: (id) =>
         set((state) => {
-          const index = state.messages.findIndex((m) => m.id === id);
-          if (index == -1) return state;
-          return { messages: state.messages.slice(0, index + 1) };
+          const data = state.chatData?.data ?? [];
+          const index = data.findIndex((m) => m.id === id);
+          if (index === -1) return state;
+          return {
+            chatData: {
+              data: data.slice(0, index + 1),
+            },
+          };
         }),
 
       editMessage: (messageId, newContent) => {
         set((state) => ({
-          messages: state.messages.map((m) =>
-            m.id === messageId ? { ...m, content: newContent } : m,
-          ),
+          chatData: {
+            data: (state.chatData?.data ?? []).map((msg) =>
+              msg.id === messageId ? { ...msg, content: newContent } : msg,
+            ),
+          },
         }));
       },
 
@@ -108,13 +142,22 @@ export const useChatStore = create<ChatState>()(
       setVoiceState: (voiceState) => set({ voiceState }),
       setConnectionStatus: (connectionStatus) => set({ connectionStatus }),
       setLatency: (latency) => set({ latency }),
-      clearHistory: () => set({ messages: [] }),
+      clearHistory: () =>
+        set({
+          chatData: {
+            data: [],
+          },
+        }),
     }),
     {
       name: "ai-tutor-storage",
       storage: createJSONStorage(() => localStorage),
 
-      partialize: (state) => ({ messages: state.messages }),
+      partialize: (state) => ({
+        chatData: {
+          data: state.chatData?.data ?? [],
+        },
+      }),
     },
   ),
 );
