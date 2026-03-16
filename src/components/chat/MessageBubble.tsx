@@ -59,10 +59,10 @@ export const MessageBubble = ({ message }: Props) => {
 
       <div className={`max-w-[80%] space-y-2`}>
         <div
-          className={`p-4 rounded-2xl ${
+          className={`p-4 rounded-2xl transition-colors duration-300 border ${
             isAI
-              ? "bg-slate-800 text-slate-100 rounded-tl-none border-slate-700"
-              : "bg-blue-600 text-white rounded-tr-none"
+              ? "rounded-tl-none bg-slate-100 border-slate-200 text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
+              : "rounded-tr-none bg-blue-600 border-blue-600 text-white shadow-md"
           }`}
         >
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -74,16 +74,16 @@ export const MessageBubble = ({ message }: Props) => {
         </div>
 
         {isAI && !message.isStreaming && (
-          <div className="flex items-cener gap-3 ml-1 text-slate-500">
+          <div className="flex items-cener gap-3 ml-1 text-slate-400 aark:text-slate-500">
             <button
               onClick={handleCopy}
-              className="hover:text-white transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <Copy size={14} />
             </button>
             <button
               onClick={handlePlay}
-              className="hover:text-white transition-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <Play size={14} />
             </button>
@@ -93,7 +93,7 @@ export const MessageBubble = ({ message }: Props) => {
             PENDING!!!! */}
             <button
               onClick={() => deleteAfter(message.id)}
-              className="hover:text-white transtion-colors"
+              className="hover:text-slate-900 dark:hover:text-white transition-colors"
             >
               <RotateCcw size={14} />
             </button>
@@ -102,8 +102,8 @@ export const MessageBubble = ({ message }: Props) => {
       </div>
 
       {!isAI && (
-        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center flex-shrink-0">
-          <User size={18} className="text-white" />
+        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+          <User size={18} className="text-slate-600 dark:text-white" />
         </div>
       )}
     </div>
