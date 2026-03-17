@@ -82,10 +82,10 @@ export const MessageBubble = ({ message }: Props) => {
 
   return (
     <div
-      className={`group mb-6 flex gap-4 ${isAI ? "justify-start" : "justify-end"}`}
+      className={`group mb-6 flex gap-4 will-change-transform ${isAI ? "justify-start" : "justify-end"}`}
     >
       {isAI && (
-        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center shrink-0">
           <Bot size={18} className="text-white" />
         </div>
       )}

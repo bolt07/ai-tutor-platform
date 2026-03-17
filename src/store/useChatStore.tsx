@@ -67,7 +67,7 @@ export const useChatStore = create<ChatState>()(
               autoScroll: ({ scrollInProgress, atBottom }) => {
                 return {
                   index: "LAST",
-                  align: "start",
+                  align: "end",
                   behavior: atBottom || scrollInProgress ? "smooth" : "auto",
                 };
               },

@@ -6,11 +6,12 @@ import { Divide } from "lucide-react";
 import {
   VirtuosoMessageList,
   VirtuosoMessageListLicense,
+  VirtuosoMessageListProps,
 } from "@virtuoso.dev/message-list";
 
 // still a few more changes to do
-// like why <Message, null> giving me error
-// it scrolls to bottoms but has an extra space first so that
+// 1. like why <Message, null> giving me error (done)
+// 2. it scrolls to bottoms but has an extra space first so that
 // AI can type easily, but the gettting the response the
 // space remains there(doesn't shrink) which looks weird
 // only top half of the chat have message and lower half is empty
@@ -28,21 +29,29 @@ export const MessageLists = () => {
     );
   }
 
+  const ItemContent: VirtuosoMessageListProps<Message, null>["ItemContent"] = ({
+    data,
+  }) => {
+    return (
+      <div className="pb-5 px-4">
+        <div className="max-w-3xl mx-auto">
+          <MessageBubble key={data.id} message={data} />
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <VirtuosoMessageListLicense licenseKey="">
-      <VirtuosoMessageList<any, null>
-        style={{ flex: 1 }}
-        data={chatData}
-        // keys to avoid rendering issues
-        computeItemKey={({ data }) => data.id}
-        ItemContent={({ data }) => (
-          <div className="pb-5 px-4">
-            <div className="max-w-3xl mx-auto">
-              <MessageBubble key={data.id} message={data} />
-            </div>
-          </div>
-        )}
-      />
-    </VirtuosoMessageListLicense>
+    <div className="flex flex-col flex-1 h-full min-h-0 text-[70%]">
+      <VirtuosoMessageListLicense licenseKey="">
+        <VirtuosoMessageList<Message, null>
+          style={{ flex: 1 }}
+          data={chatData}
+          // keys to avoid rendering issues
+          computeItemKey={({ data }) => data.id}
+          ItemContent={ItemContent}
+        />
+      </VirtuosoMessageListLicense>
+    </div>
   );
 };
