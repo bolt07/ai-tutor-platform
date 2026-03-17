@@ -8,8 +8,11 @@ export const ChatInput = () => {
   const { setVoiceState, sendMessage, connectionStatus, voiceState } =
     useChatStore();
 
-  // reference of chatInput box
+  // reference of chatInput box for vioce(SpeechRecognition instance)
   const recognitionRef = useRef<any>(null);
+
+  // refernce to textarea for manula typing(DOM ref)
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   const isDisconnected = connectionStatus === "disconnected";
   const isProcessing = voiceState === "processing";
@@ -51,6 +54,15 @@ export const ChatInput = () => {
     }
   }, [voiceState]);
 
+  useEffect(() => {
+    if (textAreaRef.current) {
+      // reset height
+      textAreaRef.current.style.height = "auto";
+      // maximum height can be 200px
+      const newHeight = Math.min(textAreaRef.current.scrollHeight, 500);
+      textAreaRef.current.style.height = `${newHeight}px`;
+    }
+  }, [text]);
   const handleSend = async () => {
     if (!text.trim() || isProcessing || isDisconnected) return;
 
@@ -94,18 +106,25 @@ export const ChatInput = () => {
         </button>
 
         <div className="relative flex-1">
-          <input
-            type="text"
+          <textarea
+            ref={textAreaRef}
+            rows={1}
             value={text}
             onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            onKeyDown={(e) => {
+              // enter and shitf+enter
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
             placeholder={
               isDisconnected
                 ? "Waiting for connection..."
                 : "Ask you tutor anything..."
             }
             disabled={isDisconnected}
-            className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all
+            className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all resize-none
                                bg-slate-100 border-slate-200 text-slate-900 placeholder-slate-400
                                dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder-slate-500"
           />

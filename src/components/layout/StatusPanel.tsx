@@ -3,6 +3,8 @@
 import { useChatStore } from "@/src/store/useChatStore";
 import {
   ActivityIcon,
+  Headphones,
+  MessageSquare,
   Mic,
   Moon,
   Sun,
@@ -11,6 +13,7 @@ import {
   WifiOff,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import Link from "next/link";
 import { connection } from "next/server";
 import { useEffect, useState } from "react";
 
@@ -72,12 +75,12 @@ export const StatusPanel = () => {
       </div>
 
       {/* Theme */}
-      <div className="mt-8 pt-5 border-t border-slate-100 dark: border-slate-800 space-y-4">
+      <div className="mt-8 pt-5 border-t border-slate-100 dark:border-slate-800 space-y-4">
         <button
           onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
           className="w-full flex items-center justify-between p-2.5 rounded-lg text-sm font-medium transtion-colors
           bg-slate-100 hover:bg-slate-200 text-slate-900
-          dark:bg-slate-800 dark: hover:bg-slate-700 dark:text-white"
+          dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-white"
         >
           <div>
             {theme === "dark" ? (
