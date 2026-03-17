@@ -103,7 +103,7 @@ export const MessageBubble = ({ message }: Props) => {
             <div>
               <textarea
                 autoFocus
-                className="w-full bg-blue-700 text-white rounded-lg p-2 text-sm outline-none border border-blue-400 focus:ring-1 focus:ring-white min-h-[80px] resize-none"
+                className="w-full bg-blue-700 text-white rounded-lg p-2 text-sm outline-none border border-blue-400 focus:ring-1 focus:ring-white min-h-20 resize-none"
                 value={editText}
                 onChange={(e) => setEditText(e.target.value)}
               />
@@ -151,7 +151,7 @@ export const MessageBubble = ({ message }: Props) => {
 
             {/* this button right now doesn't handle retries properly
             it just deletes the messages send after a certain message.
-            PENDING!!!! */}
+            PENDING!!!! -> DONE */}
             <button
               onClick={handleRetry}
               className="hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -174,7 +174,7 @@ export const MessageBubble = ({ message }: Props) => {
       </div>
 
       {!isAI && (
-        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center shrink-0">
           <User size={18} className="text-slate-600 dark:text-white" />
         </div>
       )}

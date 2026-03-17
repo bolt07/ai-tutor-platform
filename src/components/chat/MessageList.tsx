@@ -18,16 +18,8 @@ import {
 
 export const MessageLists = () => {
   const chatData = useChatStore((state) => state.chatData);
-  const messageLength = chatData?.data ?? 0;
-
-  if (messageLength === 0) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center text-slate-500">
-        <p className="text-lg">No Messages yet.</p>
-        <p className="text-sm">Start a conversation with your AI Tutor!</p>
-      </div>
-    );
-  }
+  const messages = chatData?.data ?? [];
+  const sessionId = useChatStore((state) => state.sessionId);
 
   const ItemContent: VirtuosoMessageListProps<Message, null>["ItemContent"] = ({
     data,
@@ -42,12 +34,21 @@ export const MessageLists = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 h-full min-h-0 text-[70%]">
+    <div className="flex flex-col flex-1 h-full w-full relative">
+      {/* 1. Overlay the empty state instead of unmounting the list */}
+      {messages.length === 0 && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-500 z-10 pointer-events-none">
+          <p className="text-lg">No Messages yet.</p>
+          <p className="text-sm">Start a conversation with your AI Tutor!</p>
+        </div>
+      )}
+
+      {/* 2. Virtuoso remains rendered to maintain its internal size tree */}
       <VirtuosoMessageListLicense licenseKey="">
         <VirtuosoMessageList<Message, null>
+          key={sessionId}
           style={{ flex: 1 }}
-          data={chatData}
-          // keys to avoid rendering issues
+          data={chatData ?? { data: [] }}
           computeItemKey={({ data }) => data.id}
           ItemContent={ItemContent}
         />

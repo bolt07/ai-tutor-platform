@@ -19,6 +19,8 @@ interface ChatState {
   connectionStatus: "connected" | "reconnecting" | "disconnected";
   voiceState: "idle" | "listening" | "processing" | "speaking";
   latency: number;
+  userId: string | null;
+  sessionId: string | null;
 
   // actions
   addMessage: (content: string, role: "user" | "ai") => string;
@@ -45,6 +47,8 @@ export const useChatStore = create<ChatState>()(
       connectionStatus: "connected",
       voiceState: "idle",
       latency: 0,
+      userId: "hitesh",
+      sessionId: "6aad5be6-24b2-4c00-97ab-7dc3723fdfc5",
 
       // actions in action :)
       addMessage: (content, role) => {
@@ -56,24 +60,31 @@ export const useChatStore = create<ChatState>()(
           timestamp: Date.now(),
           isStreaming: role === "ai",
         };
-
-        set((state) => ({
-          chatData: {
-            // ? -> optional chaining and ?? -> nullish coalescing(prevent app from crashing if the chat data hasn't loaded yet or missing)
-            // ?? -> check if value at left is null/undefined -> if yes then give right value
-            data: [...(state.chatData?.data ?? []), newMessage],
-            scrollModifier: {
-              type: "auto-scroll-to-bottom",
-              autoScroll: ({ scrollInProgress, atBottom }) => {
-                return {
-                  index: "LAST",
-                  align: "end",
-                  behavior: atBottom || scrollInProgress ? "smooth" : "auto",
-                };
-              },
+        set((state) => {
+          const messages = state.chatData?.data ?? [];
+          // wait until intial exchange is complete before allowing auto-scroll
+          const shouldScroll = messages.length > 1;
+          return {
+            chatData: {
+              // ? -> optional chaining and ?? -> nullish coalescing(prevent app from crashing if the chat data hasn't loaded yet or missing)
+              // ?? -> check if value at left is null/undefined -> if yes then give right value
+              data: [...messages, newMessage],
+              scrollModifier: !shouldScroll
+                ? undefined
+                : {
+                    type: "auto-scroll-to-bottom",
+                    autoScroll: ({ scrollInProgress, atBottom }) => {
+                      return {
+                        index: "LAST",
+                        align: "end",
+                        behavior:
+                          atBottom || scrollInProgress ? "smooth" : "auto",
+                      };
+                    },
+                  },
             },
-          },
-        }));
+          };
+        });
         return id;
       },
 
@@ -131,10 +142,46 @@ export const useChatStore = create<ChatState>()(
         const aiId = get().addMessage("", "ai");
         get().setVoiceState("processing");
 
+        const queryRequest = {
+          text: content,
+          user_id: get().userId,
+          session_id: get().sessionId,
+        };
+
         try {
-          await aiService.generateResponse(content, aiId);
+          const startTime = Date.now();
+
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+          const response = await fetch(`${apiUrl}/query`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(queryRequest),
+          });
+
+          if (!response.ok) {
+            throw new Error("API call failed");
+          }
+
+          if (!response.body) {
+            throw new Error("No response Body");
+          }
+          const result = await response.json();
+          const endTime = Date.now();
+
+          get().setLatency(endTime - startTime);
+          get().updateMessageContent(
+            aiId,
+            result.response || "No response received",
+            false,
+          );
         } catch (error) {
-          console.log(error);
+          console.log("Backend error:", error);
+          get().updateMessageContent(
+            aiId,
+            "failed to connect to backend.",
+            false,
+          );
         } finally {
           get().setVoiceState("idle");
         }
@@ -157,6 +204,8 @@ export const useChatStore = create<ChatState>()(
         chatData: {
           data: state.chatData?.data ?? [],
         },
+        userId: state.userId,
+        sessionId: state.sessionId,
       }),
     },
   ),

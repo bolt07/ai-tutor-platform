@@ -41,7 +41,10 @@ export const ChatInput = () => {
         const transcript = Array.from(event.results)
           .map((result: any) => result[0].transcript)
           .join("");
-        setText(transcript);
+
+        if (!isProcessing) {
+          setText(transcript);
+        }
       };
 
       recognition.onerror = (event: any) => {
@@ -124,7 +127,7 @@ export const ChatInput = () => {
                 : "Ask you tutor anything..."
             }
             disabled={isDisconnected}
-            className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all resize-none
+            className="w-full py-3 px-4 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 transition-all resize-none scrollbar-hide
                                bg-slate-100 border-slate-200 text-slate-900 placeholder-slate-400
                                dark:bg-slate-800 dark:border-slate-700 dark:text-white dark:placeholder-slate-500"
           />

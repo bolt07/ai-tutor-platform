@@ -32,7 +32,7 @@ export const StatusPanel = () => {
 
   return (
     <div
-      className="mt-6 p-5 w-64 rounded-xl border flex flex-col transition-all duration-300
+      className="mt-6 p-5 w-full rounded-xl border flex flex-col transition-all duration-300
                     bg-white border-slate-200 text-slate-900 
                     dark:bg-slate-900 dark:border-slate-800 dark:text-white"
     >
@@ -42,7 +42,7 @@ export const StatusPanel = () => {
 
       {/*connection section */}
       <div className="space-y-5 flext-1">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between w-full">
           <div className="flex items-center gap-2">
             {isConnected ? (
               <Wifi size={18} className="text-green-400" />
