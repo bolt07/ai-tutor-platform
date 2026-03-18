@@ -5,6 +5,7 @@ import { useCallback, useRef } from "react";
 export const useAudioRecorder = () => {
   // make reference of media webapi object
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+
   const startRecording = useCallback(async () => {
     try {
       // mediaDeive interface to check mic permission
@@ -44,4 +45,6 @@ export const useAudioRecorder = () => {
       useVoiceState.getState().setVoiceState("idle");
     }
   }, []);
+
+  return { startRecording, stopRecording };
 };

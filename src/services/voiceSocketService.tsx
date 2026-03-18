@@ -48,7 +48,7 @@ class voiceSocketService {
       setVoiceState,
       setPartialTranscript,
       setFinalTranscript,
-    } = useVoiceState();
+    } = useVoiceState.getState();
 
     setConnectionStatus(
       this.reconnectAttempts > 0 ? "reconnecting" : "connected",

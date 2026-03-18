@@ -1,6 +1,7 @@
 "use client";
 
 import { useChatStore } from "@/src/store/useChatStore";
+import { useVoiceState } from "@/src/store/useVoiceStore";
 import {
   ActivityIcon,
   Headphones,
@@ -14,19 +15,34 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { connection } from "next/server";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 
 export const StatusPanel = () => {
-  const { connectionStatus, voiceState, latency } = useChatStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => setMounted(true), []);
 
-  const isConnected = connectionStatus === "connected";
-  const isSpeaking = voiceState === "speaking";
-  const isListening = voiceState === "listening";
+  const isVoiceMode = pathname === "/voice";
+
+  const chatConnection = useChatStore((state) => state.connectionStatus);
+  const chatVoiceState = useChatStore((state) => state.voiceState);
+  const chatLatency = useChatStore((state) => state.latency);
+
+  const voiceConnection = useVoiceState((state) => state.connectionStatus);
+  const voiceModeState = useVoiceState((state) => state.voiceState);
+  const voiceLatency = useVoiceState((state) => state.latency);
+
+  const currentConnection = isVoiceMode ? voiceConnection : chatConnection;
+  const currentVoiceState = isVoiceMode ? voiceModeState : chatVoiceState;
+  const currentLatency = isVoiceMode ? voiceLatency : chatLatency;
+
+  const isConnected = currentConnection === "connected";
+  const isSpeaking = currentVoiceState === "speaking";
+  const isListening = currentVoiceState === "listening";
 
   if (!mounted) return null;
 
@@ -36,6 +52,17 @@ export const StatusPanel = () => {
                     bg-white border-slate-200 text-slate-900 
                     dark:bg-slate-900 dark:border-slate-800 dark:text-white"
     >
+      <Link
+        href={isVoiceMode ? "/" : "/voice"}
+        className={`mb-6 w-full flex items-center justify-center gap-2 rounded-xl text-sm font-bold transtion-all shadow-sm hover:shadow-md ${
+          isVoiceMode
+            ? "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700"
+            : "bg-purple-600 text-white hover:bg-purple-500"
+        }`}
+      >
+        {isVoiceMode ? <MessageSquare size={18} /> : <Headphones size={18} />}
+        <span>Switch to {isVoiceMode ? "Text Chat" : "Voice Chat"}</span>
+      </Link>
       <h3 className="mb-6 text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
         System Status
       </h3>
@@ -53,7 +80,7 @@ export const StatusPanel = () => {
               {isConnected ? "Connected" : "Reconnecting..."}
             </span>
           </div>
-          <span className="text-xs text-slate-500">{latency}ms</span>
+          <span className="text-xs text-slate-500">{currentLatency}ms</span>
         </div>
       </div>
 
