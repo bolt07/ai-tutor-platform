@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { aiService } from "../services/aiService";
 import { VirtuosoMessageListProps } from "@virtuoso.dev/message-list";
+import { useSessionStore } from "./useSessionStore";
 
 // message structure
 export interface Message {
@@ -19,8 +20,6 @@ interface ChatState {
   connectionStatus: "connected" | "reconnecting" | "disconnected";
   voiceState: "idle" | "listening" | "processing" | "speaking";
   latency: number;
-  userId: string | null;
-  sessionId: string | null;
 
   // actions
   addMessage: (content: string, role: "user" | "ai") => string;
@@ -47,8 +46,6 @@ export const useChatStore = create<ChatState>()(
       connectionStatus: "connected",
       voiceState: "idle",
       latency: 0,
-      userId: "hitesh",
-      sessionId: "6aad5be6-24b2-4c00-97ab-7dc3723fdfc5",
 
       // actions in action :)
       addMessage: (content, role) => {
@@ -142,10 +139,12 @@ export const useChatStore = create<ChatState>()(
         const aiId = get().addMessage("", "ai");
         get().setVoiceState("processing");
 
+        const { userId, sessionId } = useSessionStore.getState();
+
         const queryRequest = {
           text: content,
-          user_id: get().userId,
-          session_id: get().sessionId,
+          user_id: userId,
+          session_id: sessionId,
         };
 
         try {
@@ -204,8 +203,6 @@ export const useChatStore = create<ChatState>()(
         chatData: {
           data: state.chatData?.data ?? [],
         },
-        userId: state.userId,
-        sessionId: state.sessionId,
       }),
     },
   ),

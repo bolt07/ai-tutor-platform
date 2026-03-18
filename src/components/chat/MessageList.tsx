@@ -8,6 +8,7 @@ import {
   VirtuosoMessageListLicense,
   VirtuosoMessageListProps,
 } from "@virtuoso.dev/message-list";
+import { useSessionStore } from "@/src/store/useSessionStore";
 
 // still a few more changes to do
 // 1. like why <Message, null> giving me error (done)
@@ -19,7 +20,7 @@ import {
 export const MessageLists = () => {
   const chatData = useChatStore((state) => state.chatData);
   const messages = chatData?.data ?? [];
-  const sessionId = useChatStore((state) => state.sessionId);
+  const sessionId = useSessionStore((state) => state.sessionId);
 
   const ItemContent: VirtuosoMessageListProps<Message, null>["ItemContent"] = ({
     data,

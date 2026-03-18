@@ -20,19 +20,16 @@
 
 import { use } from "react";
 import { useVoiceState } from "../store/useVoiceStore";
+import { useChatStore } from "../store/useChatStore";
+import { useSessionStore } from "../store/useSessionStore";
 
 // we have to make class and wrap
 class voiceSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
-  private maxReconnectAttpemts = 3;
-  private apiKey: string;
-  private socketURL: string;
+  private maxReconnectAttempts = 3;
 
-  constructor(apiKey: string) {
-    this.apiKey = apiKey;
-    this.socketURL = "";
-  }
+  constructor() {}
   // whole connections logic inside this
   connect() {
     if (
@@ -50,12 +47,16 @@ class voiceSocketService {
       setFinalTranscript,
     } = useVoiceState.getState();
 
+    const { userId, sessionId } = useSessionStore.getState();
     setConnectionStatus(
       this.reconnectAttempts > 0 ? "reconnecting" : "connected",
     );
 
     try {
-      this.ws = new WebSocket(this.socketURL);
+      const socketURL = process.env.NEXT_PUBLIC_VOICE_API;
+      this.ws = new WebSocket(
+        `${socketURL}?user_id=${userId}&session_id=${sessionId}`,
+      );
 
       this.ws.onopen = () => {
         console.log("Websocket Connected");
@@ -64,23 +65,43 @@ class voiceSocketService {
       };
 
       this.ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        console.log("new chunk:");
+        console.log("data.type:", typeof event.data);
+        console.log("raw data", event.data);
 
-        if (data.type === "transcript_partial") {
-          setPartialTranscript(data.text);
-          setFinalTranscript("");
-        } else if (data.type === "transcript_final") {
-          setFinalTranscript(data.text);
-          setPartialTranscript("");
-        } else if (data.type == "ai_speaking_start") {
-          setVoiceState("speaking");
-        } else if (data.type === "ai_speaking_stop") {
-          setVoiceState("idle");
+        if (event.data instanceof Blob) {
+          console.log("This is binary blob");
+          return;
+        }
+
+        if (event.data instanceof ArrayBuffer) {
+          console.log("This is an array buffer");
+          return;
+        }
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "transcript_partial") {
+            setPartialTranscript(data.text);
+            setFinalTranscript("");
+          } else if (data.type === "transcript_final") {
+            setFinalTranscript(data.text);
+            setPartialTranscript("");
+          } else if (data.type == "ai_speaking_start") {
+            setVoiceState("speaking");
+          } else if (data.type === "ai_speaking_stop") {
+            setVoiceState("idle");
+          }
+        } catch (error) {
+          console.warn("Message is plain text", error);
         }
       };
 
       this.ws.onclose = (event) => {
-        console.log("Websocket disconnected", event.reason);
+        console.error(`SOCKET CLOESED!`);
+        console.error(`Codde: ${event.code}`);
+        console.error(`Reason: ${event.reason || "No reason provided"}`);
+        console.error(`Was clean: ${event.wasClean}`);
+
         setConnectionStatus("disconnected");
         setVoiceState("idle");
 
@@ -99,7 +120,7 @@ class voiceSocketService {
   }
 
   private handleExponentialBackoff() {
-    if (this.reconnectAttempts < this.maxReconnectAttpemts) {
+    if (this.reconnectAttempts < this.maxReconnectAttempts) {
       useVoiceState.getState().setConnectionStatus("reconnecting");
 
       const delay = Math.pow(2, this.reconnectAttempts) * 1000;
@@ -132,6 +153,4 @@ class voiceSocketService {
   }
 }
 
-export const voiceSocket = new voiceSocketService(
-  process.env.NEXT_PUBLIC_VOICE_API || "",
-);
+export const voiceSocket = new voiceSocketService();
