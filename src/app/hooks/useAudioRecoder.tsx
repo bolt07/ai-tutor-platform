@@ -2,49 +2,71 @@ import { voiceSocket } from "@/src/services/voiceSocketService";
 import { useVoiceState } from "@/src/store/useVoiceStore";
 import { useCallback, useRef } from "react";
 
+function bufferToBase64(buffer: ArrayBuffer): string {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  return window.btoa(binary);
+}
+
 export const useAudioRecorder = () => {
-  // make reference of media webapi object
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null);
+  const sourceNodeRef = useRef<MediaStreamAudioSourceNode | null>(null);
+
+  const { setVoiceState } = useVoiceState();
 
   const startRecording = useCallback(async () => {
     try {
-      // mediaDeive interface to check mic permission
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      // event of mediarecoder (pass audio into blob)
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          voiceSocket.sendAudioChunk(event.data);
-        }
+      mediaStreamRef.current = stream;
+
+      const audioContext = new AudioContext({ sampleRate: 16000 });
+      audioContextRef.current = audioContext;
+
+      await audioContext.audioWorklet.addModule("/audio-processor.js");
+
+      const sourceNode = audioContext.createMediaStreamSource(stream);
+      sourceNodeRef.current = sourceNode;
+
+      const workletNode = new AudioWorkletNode(audioContext, "pcm-processor");
+      workletNodeRef.current = workletNode;
+
+      sourceNode.connect(workletNode);
+      workletNode.connect(audioContext.destination);
+
+      workletNode.port.onmessage = (event) => {
+        const base64Data = bufferToBase64(event.data);
+        voiceSocket.sendBase64Audio(base64Data);
       };
 
-      // chop audio every 250ms
-      mediaRecorder.start(250);
-      useVoiceState.getState().setVoiceState("listening");
+      setVoiceState("listening");
     } catch (error) {
-      console.error("Error accessing microphone:", error);
-      alert("Allow microphone access.");
+      console.log("Failed to start audio pipline:", error);
     }
-  }, []);
+  }, [setVoiceState]);
 
   const stopRecording = useCallback(() => {
-    if (
-      mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
-    ) {
-      mediaRecorderRef.current.stop();
+    if (workletNodeRef.current) workletNodeRef.current.disconnect();
+    if (sourceNodeRef.current) sourceNodeRef.current.disconnect();
+    if (audioContextRef.current) audioContextRef.current.close();
 
-      // stop all audio track given by getTrack()
-      // getTrack return array of MediaStreamTrack(it contains info about each track) objects
-      mediaRecorderRef.current.stream.getTracks().forEach((track) => {
-        track.stop();
-      });
-
-      mediaRecorderRef.current = null;
-      useVoiceState.getState().setVoiceState("idle");
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
     }
-  }, []);
+
+    workletNodeRef.current = null;
+    sourceNodeRef.current = null;
+    audioContextRef.current = null;
+    mediaStreamRef.current = null;
+
+    setVoiceState("idle");
+  }, [setVoiceState]);
 
   return { startRecording, stopRecording };
 };

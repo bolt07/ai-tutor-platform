@@ -14,9 +14,11 @@ import {
   Volume2,
 } from "lucide-react";
 import { StatusPanel } from "@/src/components/layout/StatusPanel";
+import { aiAudioQueue } from "@/src/services/audioQueueService";
 
 export default function VoiceChat() {
-  const { voiceState, partialTranscript, finalTranscript } = useVoiceState();
+  const { voiceState, partialTranscript, finalTranscript, setVoiceState } =
+    useVoiceState();
   const { startRecording, stopRecording } = useAudioRecorder();
 
   useEffect(() => {
@@ -27,8 +29,17 @@ export default function VoiceChat() {
       voiceSocket.disconnect();
       useVoiceState.getState().resetTranscript();
     };
-  }, [stopRecording]);
+  }, []);
 
+  const handleMicToggle = () => {
+    if (voiceState === "idle") {
+      aiAudioQueue.unlockAudio();
+      startRecording();
+    } else if (voiceState === "speaking") {
+      aiAudioQueue.stopAndClear();
+      setVoiceState("idle");
+    }
+  };
   // styles for different voiceState
   const getVoiceCircleStyle = () => {
     switch (voiceState) {
@@ -43,7 +54,6 @@ export default function VoiceChat() {
     }
   };
 
-  const isRecording = voiceState === "listening";
   return (
     <main className="flex flex-col md:flex-row h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <aside className="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 bg-white dark:bg-slate-900 shrink-0 z-20">
@@ -81,8 +91,9 @@ export default function VoiceChat() {
 
         {/* animation voice circle */}
         <div className="flex-1 flex items-center justify-center w-full max-w-md">
-          <div
-            className={`w-40 h-40 rounded-full flex items-center justify-center transition-all duration-500 ease-in-out ${getVoiceCircleStyle()}`}
+          <button
+            onClick={handleMicToggle}
+            className={`cursor-pointer hover:opacity-90 active:scale-95 w-40 h-40 rounded-full flex items-center justify-center transition-all duration-500 ease-in-out ${getVoiceCircleStyle()}`}
           >
             {voiceState === "idle" && (
               <Mic size={48} className="text-white opacity-90" />
@@ -96,7 +107,7 @@ export default function VoiceChat() {
             {voiceState === "speaking" && (
               <Volume2 size={48} className="text-white" />
             )}
-          </div>
+          </button>
         </div>
 
         <div className="h-48 w-full max-w-2xl text-center flex flex-col justify-end pb-8">
@@ -106,29 +117,6 @@ export default function VoiceChat() {
           <p className="text-lg text-slate-400 dark:text-slate-500 italic mt-2 min-h-8">
             {partialTranscript}
           </p>
-        </div>
-
-        <div className="shrink-0 pb-12">
-          <button
-            onClick={isRecording ? stopRecording : startRecording}
-            className={`flex items-center gap-3 px-8 py-4 rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-xl active:scale-95 ${
-              isRecording
-                ? "bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900"
-                : "bg-blue-600 text-white hover:bg-blue-500"
-            }`}
-          >
-            {isRecording ? (
-              <>
-                <Square size={20} />
-                <span>Stop Recording</span>
-              </>
-            ) : (
-              <>
-                <Mic size={20} />
-                <span>Start Conversation</span>
-              </>
-            )}
-          </button>
         </div>
       </section>
     </main>

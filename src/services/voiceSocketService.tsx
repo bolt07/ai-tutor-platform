@@ -22,6 +22,7 @@ import { use } from "react";
 import { useVoiceState } from "../store/useVoiceStore";
 import { useChatStore } from "../store/useChatStore";
 import { useSessionStore } from "../store/useSessionStore";
+import { aiAudioQueue } from "./audioQueueService";
 
 // we have to make class and wrap
 class voiceSocketService {
@@ -90,6 +91,15 @@ class voiceSocketService {
             setVoiceState("speaking");
           } else if (data.type === "ai_speaking_stop") {
             setVoiceState("idle");
+          } else if (data.type === "audio") {
+            aiAudioQueue.addChunk(data.data);
+            console.log("AI RESPONED!!!");
+          }
+          const inlineData =
+            data?.serverContent?.modelTurn?.parts?.[0]?.inlineData;
+
+          if (inlineData && inlineData.mimeType.startsWith("audio/pcm")) {
+            aiAudioQueue.addChunk(inlineData.data);
           }
         } catch (error) {
           console.warn("Message is plain text", error);
@@ -139,9 +149,25 @@ class voiceSocketService {
     }
   }
 
-  sendAudioChunk(chunk: Blob | ArrayBuffer) {
+  sendBase64Audio(base64Data: string) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      this.ws.send(chunk);
+      const currentState = useVoiceState.getState().voiceState;
+      if (currentState === "speaking") {
+        return;
+      }
+
+      const payload = JSON.stringify({
+        realtimeInput: {
+          mediaChunks: [
+            {
+              mimeType: "audio/pcm;rate=16000",
+              data: base64Data,
+            },
+          ],
+        },
+      });
+
+      this.ws.send(payload);
     }
   }
 
