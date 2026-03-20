@@ -14,7 +14,7 @@ export default function Home() {
   const togglesideBar = () => setIsSideBarOpen(!isSideBarOpen);
   return (
     <main
-      className="flex flex-col md:flex-row h-screen overflow-hidden transition-colors duration-300
+      className="flex flex-col md:flex-row h-[100dvh] overflow-hidden transition-colors duration-300
                      bg-slate-50 text-slate-900 
                      dark:bg-slate-950 dark:text-slate-100"
     >
@@ -31,7 +31,7 @@ export default function Home() {
 
       {/* side bar - left */}
       <aside
-        className={`${isSideBarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static fixed inset-y-0 left-0 z-40 w-72 md:w-80 border-r p-6 flex flex-col gap-6 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 transtion-transform duration-300 ease-in-out`}
+        className={`${isSideBarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 md:static fixed inset-y-0 left-0 z-40 w-72 md:w-80 border-r p-6 flex flex-col gap-6 bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 transition-transform duration-300 ease-in-out`}
       >
         <div className="hidden md:flex items-center gap-3 px-2">
           <div className="bg-blue-600 p-2 rounded-lg">
@@ -70,7 +70,7 @@ export default function Home() {
       {/* Main Chat */}
       <section className="flex-1 flex flex-col min-h-0 relative bg-white dark:bg-slate-950 overflow-hidden">
         <header
-          className="h-16 shrink-0 border-b flex items-center px-4 md:px-8 backdrop-blur-md z-10
+          className="hidden md:flex h-16 shrink-0 border-b items-center px-4 md:px-8 backdrop-blur-md z-10
                            bg-white/50 border-slate-200 
                            dark:bg-slate-950/50 dark:border-slate-800"
         >

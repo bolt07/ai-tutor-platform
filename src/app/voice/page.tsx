@@ -2,21 +2,24 @@
 
 import { useVoiceState } from "@/src/store/useVoiceStore";
 import { useAudioRecorder } from "../hooks/useAudioRecoder";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { voiceSocket } from "@/src/services/voiceSocketService";
 import Link from "next/link";
 import {
   ArrowLeft,
   GraduationCap,
   Loader,
+  Menu,
   Mic,
   Square,
   Volume2,
+  X,
 } from "lucide-react";
 import { StatusPanel } from "@/src/components/layout/StatusPanel";
 import { aiAudioQueue } from "@/src/services/audioQueueService";
 
 export default function VoiceChat() {
+  const [isSideBarOpen, setIsSideBarOpen] = useState(false);
   const { voiceState, partialTranscript, finalTranscript, setVoiceState } =
     useVoiceState();
   const { startRecording, stopRecording } = useAudioRecorder();
@@ -37,6 +40,8 @@ export default function VoiceChat() {
       stopRecording();
     }
   }, [voiceState, stopRecording]);
+
+  const togglesideBar = () => setIsSideBarOpen(!isSideBarOpen);
 
   const handleMicToggle = () => {
     if (voiceState === "idle") {
@@ -63,8 +68,22 @@ export default function VoiceChat() {
   };
 
   return (
-    <main className="flex flex-col md:flex-row h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      <aside className="w-full md:w-80 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 bg-white dark:bg-slate-900 shrink-0 z-20">
+    <main className="flex flex-col md:flex-row h-[100dvh] overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* for small screens */}
+      <div className="md:hidden flex shrink-0 items-center justify-between p-4 border-b dark:border-slate-800 bg-white dark:bg-slate-900 z-50">
+        <div className="flex items-center gap-2">
+          <GraduationCap size={24} className="text-blue-600" />
+          <h1 className="font-bold text-lg">AI Tutor</h1>
+        </div>
+        <button onClick={togglesideBar}>
+          {isSideBarOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+      <aside
+        className={`${
+          isSideBarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        } md:translate-x-0 md:static fixed inset-y-0 left-0 z-40 w-72 md:w-80 border-r border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-6 bg-white dark:bg-slate-900 transition-transform duration-300 ease-in-out`}
+      >
         <div className="hidden md:flex items-center gap-3 px-2">
           <div className="bg-blue-600 p-2 rounded-lg shadow-sm">
             <GraduationCap size={24} className="text-white" />
@@ -76,7 +95,13 @@ export default function VoiceChat() {
           <StatusPanel />
         </div>
       </aside>
-
+      {/* mobile side bar */}
+      {isSideBarOpen && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-30"
+          onClick={() => setIsSideBarOpen(false)}
+        ></div>
+      )}
       {/* Voice */}
       <section className="flex-1 flex flex-col relative items-center p-8">
         {/* center voice glowing */}
@@ -89,7 +114,7 @@ export default function VoiceChat() {
               <span className="text-red-500">"Listening..."</span>
             )}
             {voiceState === "processing" && (
-              <span className="text-blue-500">"Listening..."</span>
+              <span className="text-blue-500">"Thinking..."</span>
             )}
             {voiceState === "speaking" && (
               <span className="text-purple-500">"AI Speaking"</span>
