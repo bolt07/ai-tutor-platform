@@ -141,31 +141,15 @@ export const useChatStore = create<ChatState>()(
 
         const { userId, sessionId } = useSessionStore.getState();
 
-        const queryRequest = {
-          text: content,
-          user_id: userId,
-          session_id: sessionId,
-        };
-
         try {
           const startTime = Date.now();
 
-          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          const result = await aiService.getChatResponse(
+            content,
+            userId,
+            sessionId,
+          );
 
-          const response = await fetch(`${apiUrl}/query`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(queryRequest),
-          });
-
-          if (!response.ok) {
-            throw new Error("API call failed");
-          }
-
-          if (!response.body) {
-            throw new Error("No response Body");
-          }
-          const result = await response.json();
           const endTime = Date.now();
 
           get().setLatency(endTime - startTime);

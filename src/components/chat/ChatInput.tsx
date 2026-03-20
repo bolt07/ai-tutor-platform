@@ -59,9 +59,9 @@ export const ChatInput = () => {
 
   useEffect(() => {
     if (textAreaRef.current) {
-      // reset height
+      // reset default height to help it shrink whne text deleted or send
       textAreaRef.current.style.height = "auto";
-      // maximum height can be 200px
+      // maximum height can be 500px
       const newHeight = Math.min(textAreaRef.current.scrollHeight, 500);
       textAreaRef.current.style.height = `${newHeight}px`;
     }
@@ -115,7 +115,7 @@ export const ChatInput = () => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             onKeyDown={(e) => {
-              // enter and shitf+enter
+              // enter and shitf+enter difference
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 handleSend();
