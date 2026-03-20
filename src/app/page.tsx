@@ -2,7 +2,7 @@
 
 import { GraduationCap, Menu, Trash2, X } from "lucide-react";
 import { useChatStore } from "../store/useChatStore";
-import { StatusPanel } from "../components/layout/StatusPanel";
+import { StatusPanel } from "./Common/StatusPanel";
 import { MessageLists } from "../components/chat/MessageList";
 import { ChatInput } from "../components/chat/ChatInput";
 import { useEffect, useState } from "react";

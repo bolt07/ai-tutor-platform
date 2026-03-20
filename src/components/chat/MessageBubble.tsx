@@ -10,6 +10,9 @@ import {
   X,
 } from "lucide-react";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 interface Props {
   message: Message;
@@ -125,12 +128,23 @@ export const MessageBubble = ({ message }: Props) => {
               </div>
             </div>
           ) : (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {message.content}
-              {message.isStreaming && (
-                <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
+            <div className="text-sm leading-relaxed">
+              {isAI ? (
+                <div className="prose prose-sm max-w-none prose-code:before:content-none prose-code:after:content-none dark:prose-invert prose-p:leading-relaxed prose-pre:p-0">
+                  <ReactMarkdown
+                    remarkPlugins={[remarkMath]}
+                    rehypePlugins={[rehypeKatex]}
+                  >
+                    {message.content}
+                  </ReactMarkdown>
+                  {message.isStreaming && (
+                    <span className="inline-block w-2 h-4 ml-1 bg-blue-400 animate-pulse" />
+                  )}
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap">{message.content}</p>
               )}
-            </p>
+            </div>
           )}
         </div>
 

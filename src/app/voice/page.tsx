@@ -1,7 +1,7 @@
 "use client";
 
 import { useVoiceState } from "@/src/store/useVoiceStore";
-import { useAudioRecorder } from "../hooks/useAudioRecoder";
+import { useAudioRecorder } from "./hooks/useAudioRecoder";
 import { useEffect, useState } from "react";
 import { voiceSocket } from "@/src/services/voiceSocketService";
 import Link from "next/link";
@@ -15,7 +15,7 @@ import {
   Volume2,
   X,
 } from "lucide-react";
-import { StatusPanel } from "@/src/components/layout/StatusPanel";
+import { StatusPanel } from "@/src/app/Common/StatusPanel";
 import { aiAudioQueue } from "@/src/services/audioQueueService";
 
 export default function VoiceChat() {
