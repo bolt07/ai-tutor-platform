@@ -59,6 +59,8 @@ class voiceSocketService {
         `${socketURL}?user_id=${userId}&session_id=${sessionId}`,
       );
 
+      this.ws.binaryType = "arraybuffer";
+
       this.ws.onopen = () => {
         console.log("Websocket Connected");
         this.reconnectAttempts = 0;
@@ -66,43 +68,14 @@ class voiceSocketService {
       };
 
       this.ws.onmessage = (event) => {
-        console.log("new chunk:");
-        console.log("data.type:", typeof event.data);
-        console.log("raw data", event.data);
-
-        if (event.data instanceof Blob) {
-          console.log("This is binary blob");
-          return;
-        }
-
         if (event.data instanceof ArrayBuffer) {
-          console.log("This is an array buffer");
+          console.log("Recieved raw audio from AI");
+          const currentState = useVoiceState.getState().voiceState;
+          if (currentState !== "speaking") {
+            useVoiceState.getState().setVoiceState("speaking");
+          }
+          aiAudioQueue.addChunk(event.data);
           return;
-        }
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === "transcript_partial") {
-            setPartialTranscript(data.text);
-            setFinalTranscript("");
-          } else if (data.type === "transcript_final") {
-            setFinalTranscript(data.text);
-            setPartialTranscript("");
-          } else if (data.type == "ai_speaking_start") {
-            setVoiceState("speaking");
-          } else if (data.type === "ai_speaking_stop") {
-            setVoiceState("idle");
-          } else if (data.type === "audio") {
-            aiAudioQueue.addChunk(data.data);
-            console.log("AI RESPONED!!!");
-          }
-          const inlineData =
-            data?.serverContent?.modelTurn?.parts?.[0]?.inlineData;
-
-          if (inlineData && inlineData.mimeType.startsWith("audio/pcm")) {
-            aiAudioQueue.addChunk(inlineData.data);
-          }
-        } catch (error) {
-          console.warn("Message is plain text", error);
         }
       };
 
@@ -149,25 +122,14 @@ class voiceSocketService {
     }
   }
 
-  sendBase64Audio(base64Data: string) {
+  sendRawAudio(pcmBuffer: ArrayBuffer) {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       const currentState = useVoiceState.getState().voiceState;
       if (currentState === "speaking") {
         return;
       }
 
-      const payload = JSON.stringify({
-        realtimeInput: {
-          mediaChunks: [
-            {
-              mimeType: "audio/pcm;rate=16000",
-              data: base64Data,
-            },
-          ],
-        },
-      });
-
-      this.ws.send(payload);
+      this.ws.send(pcmBuffer);
     }
   }
 

@@ -29,7 +29,14 @@ export default function VoiceChat() {
       voiceSocket.disconnect();
       useVoiceState.getState().resetTranscript();
     };
-  }, []);
+  }, [stopRecording]);
+
+  // whenever voice-state changes this effect runs to change the ui and stops the recording is required
+  useEffect(() => {
+    if (voiceState === "speaking" || voiceState === "idle") {
+      stopRecording();
+    }
+  }, [voiceState, stopRecording]);
 
   const handleMicToggle = () => {
     if (voiceState === "idle") {
@@ -40,6 +47,7 @@ export default function VoiceChat() {
       setVoiceState("idle");
     }
   };
+
   // styles for different voiceState
   const getVoiceCircleStyle = () => {
     switch (voiceState) {

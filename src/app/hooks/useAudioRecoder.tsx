@@ -2,17 +2,6 @@ import { voiceSocket } from "@/src/services/voiceSocketService";
 import { useVoiceState } from "@/src/store/useVoiceStore";
 import { useCallback, useRef } from "react";
 
-function bufferToBase64(buffer: ArrayBuffer): string {
-  let binary = "";
-  const bytes = new Uint8Array(buffer);
-
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-
-  return window.btoa(binary);
-}
-
 export const useAudioRecorder = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
@@ -22,32 +11,45 @@ export const useAudioRecorder = () => {
   const { setVoiceState } = useVoiceState();
 
   const startRecording = useCallback(async () => {
+    setVoiceState("listening");
     try {
+      // browswer permission for using mic(FUTURE UPDATE into a pop to ask persion)
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
+      // setup AudioContext (16kHz) , it also starts a separt thread then our react-main thread
       const audioContext = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioContext;
 
+      // add audio-processor code to browser
       await audioContext.audioWorklet.addModule("/audio-processor.js");
 
+      // adds the mic as sourceNode
       const sourceNode = audioContext.createMediaStreamSource(stream);
       sourceNodeRef.current = sourceNode;
 
+      // worklet handle the convertion of float32 into int16 by using pcm-processor
       const workletNode = new AudioWorkletNode(audioContext, "pcm-processor");
       workletNodeRef.current = workletNode;
 
+      // simple connect the source to microphone
       sourceNode.connect(workletNode);
+
+      // it is very interesting, context.destination is device speakers
+      // but we have already connected worklet to audio-processor
+      // audio processor convert to pcm16 send to socket
+      // have to use audioContext.destination not directly connect to audio-prcoessor
+      // speaker need to be connected otherwise browser stops the mic
       workletNode.connect(audioContext.destination);
 
+      // now have to access the pcm16 data saved on Audio-thread or browser
+      // and send it to server
       workletNode.port.onmessage = (event) => {
-        const base64Data = bufferToBase64(event.data);
-        voiceSocket.sendBase64Audio(base64Data);
+        voiceSocket.sendRawAudio(event.data);
       };
-
-      setVoiceState("listening");
     } catch (error) {
       console.log("Failed to start audio pipline:", error);
+      setVoiceState("idle");
     }
   }, [setVoiceState]);
 
@@ -66,7 +68,7 @@ export const useAudioRecorder = () => {
     mediaStreamRef.current = null;
 
     setVoiceState("idle");
-  }, [setVoiceState]);
+  }, []);
 
   return { startRecording, stopRecording };
 };
