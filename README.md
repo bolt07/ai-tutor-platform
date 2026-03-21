@@ -4,9 +4,9 @@ A real-time educational application featuring interactive voice and text chat. T
 
 ## Features
 
-- **Real-time Voice Chat:**Push the mic and talk to you AI tutor.
-- **Text Chat:**You can also ask questions via text also with good markdown support.
-- **Persistance History:**Chat history and user sessions persist across reloads.
+- **Real-time Voice Chat:** Push the mic and talk to you AI tutor.
+- **Text Chat:** You can also ask questions via text also with good markdown support.
+- **Persistance History:** Chat history and user sessions persist across reloads.
 
 ## Tech Stack
 
