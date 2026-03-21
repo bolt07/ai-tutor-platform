@@ -20,8 +20,12 @@ A real-time educational application featuring interactive voice and text chat. T
 
 ## Architecture
 
-![Chat Page Architecture](assets\chatPage.png)
-![Voice Page Architecture](assets\voicePage.png)
+<p align="center">
+  <img src="assets\chatPage.png" alt="Chat Page Architecture" width="600"/>
+</p>
+<p align="center">
+  <img src="assets\voicePage.png" alt="Voice Page Architecture" width="600"/>
+</p>
 
 ## Getting Started
 
