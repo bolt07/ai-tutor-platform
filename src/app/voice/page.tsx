@@ -20,8 +20,7 @@ import { aiAudioQueue } from "@/src/services/audioQueueService";
 
 export default function VoiceChat() {
   const [isSideBarOpen, setIsSideBarOpen] = useState(false);
-  const { voiceState, partialTranscript, finalTranscript, setVoiceState } =
-    useVoiceState();
+  const { voiceState, setVoiceState } = useVoiceState();
   const { startRecording, stopRecording } = useAudioRecorder();
 
   useEffect(() => {
@@ -30,7 +29,7 @@ export default function VoiceChat() {
     return () => {
       stopRecording();
       voiceSocket.disconnect();
-      useVoiceState.getState().resetTranscript();
+      //useVoiceState.getState().resetTranscript();
     };
   }, [stopRecording]);
 
@@ -141,15 +140,6 @@ export default function VoiceChat() {
               <Volume2 size={48} className="text-white" />
             )}
           </button>
-        </div>
-
-        <div className="h-48 w-full max-w-2xl text-center flex flex-col justify-end pb-8">
-          <p className="text-2xl font-medium text-slate-800 dark:text-slate-200 transition-all">
-            {finalTranscript}
-          </p>
-          <p className="text-lg text-slate-400 dark:text-slate-500 italic mt-2 min-h-8">
-            {partialTranscript}
-          </p>
         </div>
       </section>
     </main>

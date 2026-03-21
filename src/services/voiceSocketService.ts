@@ -41,14 +41,10 @@ class voiceSocketService {
       return;
     }
 
-    const {
-      setConnectionStatus,
-      setVoiceState,
-      setPartialTranscript,
-      setFinalTranscript,
-    } = useVoiceState.getState();
-
+    const { setConnectionStatus, setVoiceState } = useVoiceState.getState();
+    //useSessionStore.getState().initSession();
     const { userId, sessionId } = useSessionStore.getState();
+
     setConnectionStatus(
       this.reconnectAttempts > 0 ? "reconnecting" : "connected",
     );

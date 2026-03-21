@@ -17,7 +17,7 @@ export const useAudioRecorder = () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaStreamRef.current = stream;
 
-      // setup AudioContext (16kHz) , it also starts a separt thread then our react-main thread
+      // setup AudioContext (16kHz)
       const audioContext = new AudioContext({ sampleRate: 16000 });
       audioContextRef.current = audioContext;
 

@@ -7,16 +7,13 @@ interface VoiceState {
   voiceState: "idle" | "listening" | "processing" | "speaking";
   latency: number;
 
-  partialTranscript: string;
-  finalTranscript: string;
-
   // actions
   setConnectionStatus: (status: VoiceState["connectionStatus"]) => void;
   setVoiceState: (state: VoiceState["voiceState"]) => void;
   setLatency: (ms: number) => void;
-  setPartialTranscript: (text: string) => void;
-  setFinalTranscript: (text: string) => void;
-  resetTranscript: () => void;
+  // setPartialTranscript: (text: string) => void;
+  // setFinalTranscript: (text: string) => void;
+  //resetTranscript: () => void;
 }
 
 export const useVoiceState = create<VoiceState>()(
@@ -26,20 +23,12 @@ export const useVoiceState = create<VoiceState>()(
       connectionStatus: "disconnected",
       voiceState: "idle",
       latency: 0,
-      partialTranscript: "",
-      finalTranscript: "",
 
       setConnectionStatus: (status) => set({ connectionStatus: status }),
 
       setVoiceState: (voiceState) => set({ voiceState }),
 
       setLatency: (latency) => set({ latency }),
-      setPartialTranscript: (partialTranscript) => set({ partialTranscript }),
-
-      setFinalTranscript: (finalTranscript) => set({ finalTranscript }),
-
-      resetTranscript: () =>
-        set({ partialTranscript: "", finalTranscript: "" }),
     }),
     {
       name: "voice-session-storage",
