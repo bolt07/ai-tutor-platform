@@ -14,6 +14,7 @@ A real-time educational application featuring interactive voice and text chat. T
 - **Styling:** Tailwind / Lucide-Icons / Tailwind-typography
 - **State Mangement:** Zustand
 
+* **Persistance:** React-virutuoso
 * **Audio Processing for text-chat:** SpeechRecognition / SpeechSynthesis WebAPIs
 * **Audio-Streaming for voice-chat:** Web Audio API
 * **Networking:** HTTPS / Websockets

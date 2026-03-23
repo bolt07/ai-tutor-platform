@@ -29,6 +29,7 @@ class voiceSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 3;
+  private intentionalDisconnect = false;
 
   constructor() {}
   // whole connections logic inside this
@@ -84,6 +85,9 @@ class voiceSocketService {
         setConnectionStatus("disconnected");
         setVoiceState("idle");
 
+        if (this.intentionalDisconnect) {
+          return;
+        }
         if (!event.wasClean) {
           this.handleExponentialBackoff();
         }
@@ -130,6 +134,7 @@ class voiceSocketService {
   }
 
   disconnect() {
+    this.intentionalDisconnect = true;
     if (this.ws) {
       this.ws.close(1000, "User manually disconnted");
       this.ws = null;
